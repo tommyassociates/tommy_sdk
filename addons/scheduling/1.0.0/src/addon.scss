@@ -1,0 +1,29 @@
+.page#scheduling__index {
+  .refresh-panel {
+    background: none;
+    border-bottom: none;
+  }
+  .refresh-panel {
+    text-align: center;
+    padding: 12px 10px;
+  }
+  .refresh-panel .refresh {
+    margin-left: 10px;
+  }
+  .list {
+    .item-media {
+      padding-top: 8px;
+      padding-bottom: 8px;
+    }
+    li {
+      background: #fff;
+      border-bottom: none;
+      + li {
+        margin-top: 1px;
+      }
+    }
+  }
+
+
+}
+

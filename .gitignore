@@ -44,4 +44,7 @@ www/
 src/fonts
 bak/
 archives/*.zip
-config*
+config.json
+
+# Editor files
+.idea

@@ -95,7 +95,7 @@
 
   import ActiveAvatar from "../components/circle-avatar.vue";
   import Events from "../components/events.vue";
-  import Photo from 'tommy_core/src/components/photo.vue';
+  import Photo from '../components/photo.vue';
   import Geo from "../components/geo.vue";
   import Blob from "../mixins/baseToBlob.vue";
 
@@ -177,7 +177,9 @@
         const self = this;
         self.$f7.preloader.show()
         self.$refs.geo.takeGeoAsync().then(cords => {
+          console.log('GEO', JSON.stringify(cords));
           self.$refs.photo.takePhotoAsync().then(photo => {
+            console.log('PHOTO', JSON.stringify(photo));
             const form = new FormData();
             form.append("event_id", API.shifts_active_id);
             form.append("latitude", cords.latitude);
@@ -205,7 +207,9 @@
         const self = this;
         self.$f7.preloader.show()
         self.$refs.geo.takeGeoAsync().then(cords => {
+          console.log('GEO', JSON.stringify(cords));
           self.$refs.photo.takePhotoAsync().then(photo => {
+            console.log('PHOTO', JSON.stringify(photo));
             const form = new FormData();
             form.append("event_id", API.shifts_active_id);
             form.append("latitude", cords.latitude);

@@ -54,8 +54,8 @@ const AttendanceService = {
     const today = self.$moment(new Date()).format('YYYY-MM-DD');
     const yesterday = self.$moment(today).subtract(1, 'day').format('YYYY-MM-DD');
 
-    console.log(today);
-    console.log(yesterday);
+    // console.log(today);
+    // console.log(yesterday);
 
     const days = data.reduce((days, attendance) => {
       const dateTimestamp = attendance.timestamp; //.split('T')[0];
@@ -80,7 +80,7 @@ const AttendanceService = {
       days[date].attendances.push(attendance);
       return days;
     }, {});
-console.log(days);
+// console.log(days);
     return days;
   },
 

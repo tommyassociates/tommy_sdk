@@ -7,6 +7,7 @@
   "description": "SDK for building Tommy addons.",
   "scripts": {
     "start": "node server.js",
+    "start:prod": "cross-env NODE_ENV=production node server.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "update:packages": "node scripts/wipe-dependencies.js && rm -rf node_modules && npm update --save-dev && npm update --save",
@@ -25,6 +26,7 @@
   "dependencies": {
     "archiver": "^3.1.1",
     "chart.js": "^2.9.4",
+    "cross-env": "^6.0.3",
     "dom7": "^2.1.5",
     "framework7": "^3.6.2",
     "framework7-vue": "^3.6.2",

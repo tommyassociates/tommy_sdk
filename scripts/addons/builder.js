@@ -1,5 +1,6 @@
 const webpack = require('webpack')
 const VueLoaderPlugin = require('vue-loader/lib/plugin')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const OptimizeCSSPlugin = require('optimize-css-assets-webpack-plugin')
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
@@ -17,32 +18,28 @@ function resolvePath(dir) {
   return path.join(__dirname, '..', '..', dir)
 }
 
-function jsOutputPath(file) {
-  return file
-          .replace(resolvePath('./'), '')
-          .replace('src/addon.js', 'build/addon')
+function resolveAddonPath(baseDir, ...dir) {
+  const p = path.join(baseDir, ...dir)
+  console.log('pp', p)
+  return p
 }
 
-function cssOutputPath(file) {
-  return file
-          .replace(resolvePath('./'), '')
-          .replace('src/addon.scss', 'build/addon.css')
-}
-
-function createConfig(pkg, version) {
+function createConfig(pkg, version, localAddonFilePath) {
   const jsEntry = `addons/${pkg}/${version}/build/addon`
-  const cssEntry = `addons/${pkg}/${version}/build/addon.css`
+  const cssEntry = `build/addon.css`
 
   return {
-    mode: 'production', // 'development'
+    mode: process.env.NODE_ENV, // 'development'
     devtool: false,
     entry: {
-      [jsEntry]: resolvePath(`addons/${pkg}/${version}/src/addon.js`),
-      [cssEntry]: resolvePath(`addons/${pkg}/${version}/src/addon.scss`),
+      [jsEntry]: [
+        resolveAddonPath(localAddonFilePath, `addons/${pkg}/${version}/src/addon.js`),
+        resolveAddonPath(localAddonFilePath, `addons/${pkg}/${version}/src/addon.scss`)
+      ],
     },
     output: {
       filename: '[name].js',
-      path: resolvePath(''),
+      path: resolveAddonPath(localAddonFilePath, ''),
       libraryTarget: 'var',
       library: 'addon',
       // iife: true,
@@ -56,7 +53,11 @@ function createConfig(pkg, version) {
       alias: {
         'vue$': 'vue/dist/vue.esm.js',
         '@': resolvePath('src'),
-      }
+      },
+      modules: [
+        resolvePath('node_modules'),
+        resolvePath('node_modules/tommy-core'),
+      ]
     },
     module: {
       rules: [
@@ -80,13 +81,15 @@ function createConfig(pkg, version) {
         {
           test: /\.scss$/,
           use: [
-            {
-              loader: 'file-loader',
-              options: {
-                name: cssOutputPath
-                // name: '[path][name].css',
-              }
-            },
+            process.env.NODE_ENV !== 'production' ? 'vue-style-loader' : MiniCssExtractPlugin.loader,
+            'css-loader',
+            // {
+            //   loader: 'file-loader',
+            //   options: {
+            //     name: (name) => cssOutputPath(name, localAddonFilePath)
+            //     // name: '[path][name].css',
+            //   }
+            // },
             // {
             //     loader: 'postcss-loader'
             // },
@@ -124,6 +127,14 @@ function createConfig(pkg, version) {
     },
     plugins: [
       new webpack.DefinePlugin(helpers.getSdkVariables()),
+      new MiniCssExtractPlugin({
+        // filename: (pathData) => {
+        //   console.log('css', pathData.chunk.name)
+        //   return pathData.chunk.name
+        // },
+        filename: '[name].css',
+        chunkFilename: '[id].css'
+      }),
       // new UglifyJsPlugin({
       //   uglifyOptions: {
       //     compress: {
@@ -145,18 +156,21 @@ function createConfig(pkg, version) {
       // new webpack.HashedModuleIdsPlugin(),
       // new webpack.optimize.ModuleConcatenationPlugin(),
       new CleanWebpackPlugin({
-        // dry: true,
-        cleanOnceBeforeBuildPatterns: [resolvePath(`addons/${pkg}/${version}/build/addon.*`)],
-        cleanAfterEveryBuildPatterns: [resolvePath(`addons/${pkg}/${version}/build/addon.css.js`)]
+        cleanOnceBeforeBuildPatterns: [resolveAddonPath(localAddonFilePath, `addons/${pkg}/${version}/build/addon.*`)],
+        cleanAfterEveryBuildPatterns: [resolveAddonPath(localAddonFilePath, `addons/${pkg}/${version}/build/addon.css.js`)],
+        dry: false,
+        dangerouslyAllowCleanPatternsOutsideProject: true
       })
     ]
   }
 }
 
 module.exports = function(pkg, version) {
+  const localAddonFilePath = helpers.getLocalAddonFilePath('', '', '..') // ex. tommy-sdk-private
+
   return new Promise((resolve, reject) => {
-    console.error('addon building', pkg, version)
-    const config = createConfig(pkg, version)
+    console.error('addon building', pkg, version, 'in', process.env.NODE_ENV)
+    const config = createConfig(pkg, version, localAddonFilePath)
     const compiler = webpack(config)
     compiler.run((err, stats) => {
       if (err) {
@@ -184,7 +198,7 @@ module.exports = function(pkg, version) {
 
       // FIX: Addons need to be exported as a global variable to support old
       // builds, so we need to ensure the default module is exposed directly.
-      const outputFile = resolvePath(`addons/${pkg}/${version}/build/addon.js`)
+      const outputFile = resolveAddonPath(localAddonFilePath, `addons/${pkg}/${version}/build/addon.js`)
       fs.readFile(outputFile, 'utf8', function (err, data) {
         if (err) {
           return console.log(err)

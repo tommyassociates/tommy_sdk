@@ -19,23 +19,17 @@ function resolvePath(dir) {
 }
 
 function resolveAddonPath(baseDir, ...dir) {
-  const p = path.join(baseDir, ...dir)
-  console.log('pp', p)
-  return p
+  return path.join(baseDir, ...dir)
 }
 
 function createConfig(pkg, version, localAddonFilePath) {
   const jsEntry = `addons/${pkg}/${version}/build/addon`
-  const cssEntry = `build/addon.css`
 
   return {
     mode: process.env.NODE_ENV, // 'development'
     devtool: false,
     entry: {
-      [jsEntry]: [
-        resolveAddonPath(localAddonFilePath, `addons/${pkg}/${version}/src/addon.js`),
-        resolveAddonPath(localAddonFilePath, `addons/${pkg}/${version}/src/addon.scss`)
-      ],
+      [jsEntry]: resolveAddonPath(localAddonFilePath, `addons/${pkg}/${version}/src/addon.js`),
     },
     output: {
       filename: '[name].js',
@@ -52,7 +46,7 @@ function createConfig(pkg, version, localAddonFilePath) {
       extensions: ['.js', '.vue', '.json'],
       alias: {
         'vue$': 'vue/dist/vue.esm.js',
-        '@': resolvePath('src'),
+        '@': resolveAddonPath(localAddonFilePath, 'addons/${pkg}/${version}/src'),
       },
       modules: [
         resolvePath('node_modules'),
@@ -81,7 +75,7 @@ function createConfig(pkg, version, localAddonFilePath) {
         {
           test: /\.scss$/,
           use: [
-            process.env.NODE_ENV !== 'production' ? 'vue-style-loader' : MiniCssExtractPlugin.loader,
+            MiniCssExtractPlugin.loader,
             'css-loader',
             // {
             //   loader: 'file-loader',
